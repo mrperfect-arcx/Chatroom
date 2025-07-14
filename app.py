@@ -1,11 +1,11 @@
 from flask import Flask, render_template, request, redirect, session, jsonify
 import sqlite3
-import os  # ✅ required for file existence check
+import os
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
-# Initialize DB
+# Initialize DB (always, for Render)
 def init_db():
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
@@ -34,9 +34,8 @@ def init_db():
     conn.commit()
     conn.close()
 
-# ✅ Initialize DB only if it doesn't exist
-if not os.path.exists("database.db"):
-    init_db()
+# ✅ Always initialize DB (important for stateless platforms like Render)
+init_db()
 
 @app.route('/')
 def login_page():
@@ -101,3 +100,7 @@ def get_messages():
 def logout():
     session.pop('username', None)
     return redirect('/')
+
+# ✅ Required to run on Render
+if __name__ == '__main__':
+    app.run()
