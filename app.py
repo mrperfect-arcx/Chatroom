@@ -5,18 +5,16 @@ import os
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
-# Initialize DB (always, for Render)
+# Initialize DB
 def init_db():
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
 
-    # Create users table
     c.execute('''CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY,
                 username TEXT UNIQUE,
                 password TEXT)''')
 
-    # Create messages table
     c.execute('''CREATE TABLE IF NOT EXISTS messages (
                 id INTEGER PRIMARY KEY,
                 sender TEXT,
@@ -24,18 +22,18 @@ def init_db():
                 message TEXT,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
 
-    # Insert default users (only for demo)
     try:
         c.execute("INSERT INTO users (username, password) VALUES ('user1', 'pass1')")
         c.execute("INSERT INTO users (username, password) VALUES ('user2', 'pass2')")
     except sqlite3.IntegrityError:
-        pass  # Users already exist
+        pass
 
     conn.commit()
     conn.close()
 
-# ✅ Always initialize DB (important for stateless platforms like Render)
-init_db()
+# Initialize DB only if not exists
+if not os.path.exists("database.db"):
+    init_db()
 
 @app.route('/')
 def login_page():
@@ -101,6 +99,7 @@ def logout():
     session.pop('username', None)
     return redirect('/')
 
-# ✅ Required to run on Render
+# ✅ Final fix: This runs the app correctly on Render
 if __name__ == '__main__':
-    app.run()
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
