@@ -2,7 +2,7 @@ services:
   - type: web
     name: chat-room
     env: python
-    startCommand: gunicorn app:app
+    startCommand: python3 app.py
     envVars:
       - key: FLASK_ENV
         value: production
