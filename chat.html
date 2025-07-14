@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Chat Room</title>
+        <link
+            rel="stylesheet"
+            href="{{ url_for('static', filename='Style.css') }}"
+        />
+    </head>
+    <body class="chat-page">
+        <header>
+            <h1>Secure Chat</h1>
+            <div class="user-info">
+                Logged in as: <strong>{{ username }}</strong>
+                <a href="/logout">Logout</a>
+            </div>
+        </header>
+
+        <div class="chat-container" id="chatContainer">
+            <!-- Messages will appear here -->
+        </div>
+
+        <div class="input-area">
+            <input
+                type="text"
+                id="messageInput"
+                placeholder="Type your message..."
+            />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+
+        <script>
+            const username = "{{ username }}";
+
+            function loadMessages() {
+                fetch("/get_messages")
+                    .then((response) => response.json())
+                    .then((messages) => {
+                        const container =
+                            document.getElementById("chatContainer");
+                        container.innerHTML = "";
+
+                        messages.forEach((msg) => {
+                            const msgDiv = document.createElement("div");
+                            msgDiv.className =
+                                msg.sender === username
+                                    ? "message sent"
+                                    : "message received";
+                            msgDiv.innerHTML = `
+                            <div class="msg-header">
+                                <strong>${msg.sender}</strong>
+                                <span>${msg.time}</span>
+                            </div>
+                            <div class="msg-text">${msg.text}</div>
+                        `;
+                            container.appendChild(msgDiv);
+                        });
+                        container.scrollTop = container.scrollHeight;
+                    });
+            }
+
+            function sendMessage() {
+                const input = document.getElementById("messageInput");
+                const message = input.value.trim();
+
+                if (message) {
+                    fetch("/send", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ message }),
+                    }).then(() => {
+                        input.value = "";
+                        loadMessages();
+                    });
+                }
+            }
+
+            // Load messages every 2 seconds
+            setInterval(loadMessages, 2000);
+            window.onload = loadMessages;
+
+            // Send message on Enter key
+            document
+                .getElementById("messageInput")
+                .addEventListener("keypress", (e) => {
+                    if (e.key === "Enter") sendMessage();
+                });
+        </script>
+    </body>
+</html>
